@@ -2,7 +2,7 @@
 
 This is a comprehensive E-Voting system built as a major project. It features a secure Django backend with a dynamic HTML/JavaScript frontend. The system ensures vote integrity and voter privacy through OTP authentication, end-to-end encryption, and a blockchain-based audit trail.
 
-This project was built by **Kishore Reddy**, **Prameela**, and **Kavya**.
+This project was built by **Prameela**, **Kishore Reddy** and **Kavya**.
 
 ---
 
