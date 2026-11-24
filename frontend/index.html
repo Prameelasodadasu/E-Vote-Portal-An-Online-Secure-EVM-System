@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Vote Portal - Login</title>
+    <style>
+        /* --- STYLES ARE THE SAME AS BEFORE (PARTICLE BACKGROUND, ETC.) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #1a202c; padding: 20px; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 95vh; overflow: hidden; position: relative; }
+        #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; }
+        .scrolling-title { width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.5); color: #fff; padding: 10px 0; margin-bottom: 30px; position: relative; z-index: 2; border-radius: 5px; }
+        .scrolling-title span { display: inline-block; padding-left: 100%; animation: scroll-left 20s linear infinite; font-size: 1.2em; font-weight: 600; }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .container { background-color: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); max-width: 450px; width: 100%; margin: auto; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); text-align: center; color: #fff; position: relative; z-index: 1; }
+        h2 { color: #fff; margin-bottom: 10px; font-weight: 600; }
+        /* --- New Style for Election Title --- */
+        #election-title {
+            color: #f1f1f1;
+            font-size: 1.1em;
+            margin-bottom: 25px;
+            font-weight: 400;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 15px;
+        }
+        label { display: block; margin-bottom: 8px; font-weight: 400; color: #f1f1f1; text-align: left; }
+        input[type="text"]{ background-color: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); display: block; margin-bottom: 20px; width: 100%; padding: 12px; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input::placeholder { color: rgba(255, 255, 255, 0.7); }
+        .delivery-options { text-align: left; margin-bottom: 20px; }
+        .delivery-options label { display: inline-block; margin-right: 15px; font-weight: normal; color: #eee; cursor: pointer;}
+        .delivery-options input[type="radio"] { width: auto; margin-right: 5px; vertical-align: middle; cursor: pointer;}
+        button { display: block; width: 100%; cursor: pointer; padding: 12px 15px; background-color: #ffffff; color: #007bff; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; margin-top: 25px; transition: all 0.3s ease; }
+        button:hover { background-color: #f1f1f1; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        button:disabled { background-color: #aaa; cursor: not-allowed; transform: none; }
+        .error, .message { margin-bottom: 15px; font-weight: bold; text-align: center; min-height: 1em; }
+        .error { color: #ffcdd2; }
+        .message { color: #c8e6c9; }
+    </style>
+</head>
+<body>
+
+    <div id="particles-js"></div>
+
+    <div class="scrolling-title">
+        <span>E-Vote-Portal-Online-Secure-EVM-System ✨ E-Vote-Portal-Online-Secure-EVM-System ✨ E-Vote-Portal-Online-Secure-EVM-System ✨</span>
+    </div>
+
+    <div class="container">
+        <h2>🗳️ Voter Login</h2>
+        <h3 id="election-title">Loading active election...</h3>
+        <p id="message" class="message"></p>
+        <p id="error" class="error"></p>
+
+        <label for="voterId">Enter Your Voter ID:</label>
+        <input type="text" id="voterId" name="voterId" placeholder="e.g., kishore123" required>
+
+        <input type="hidden" name="deliveryMethod" value="sms">
+
+        <button onclick="requestOtp()">Request OTP via SMS</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS("particles-js", { "particles": { "number": { "value": 80, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#ffffff" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": false }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 6, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "repulse": { "distance": 200, "duration": 0.4 }, "push": { "particles_nb": 4 } } }, "retina_detect": true });
+    </script>
+    
+    <script>
+        const API_BASE_URL = "http://127.0.0.1:8000/api";
+
+        // --- New Function to Load Election Title ---
+        async function loadElectionTitle() {
+            const titleElement = document.getElementById('election-title');
+            try {
+                const response = await fetch(`${API_BASE_URL}/elections/active/`);
+                const elections = await response.json();
+                
+                if (response.ok && elections.length > 0) {
+                    // Display the title of the first active election
+                    titleElement.textContent = elections[0].title;
+                } else if (elections.length === 0) {
+                    titleElement.textContent = "No Active Election";
+                } else {
+                    titleElement.textContent = "Could not load election";
+                }
+            } catch (err) {
+                console.error('Load Election Title Error:', err);
+                titleElement.textContent = "Error loading election";
+            }
+        }
+        // --- Load the title when the page loads ---
+        window.onload = loadElectionTitle;
+        // ------------------------------------------
+
+        async function requestOtp() {
+            const voterIdInput = document.getElementById('voterId');
+            const voterId = voterIdInput.value.trim();
+            const deliveryMethod = "sms"; // Hardcoded to SMS
+            const errorElement = document.getElementById('error');
+            const messageElement = document.getElementById('message');
+            const button = document.querySelector('button');
+
+            errorElement.textContent = '';
+            messageElement.textContent = '';
+
+            if (!voterId) {
+                errorElement.textContent = 'Please enter your Voter ID.';
+                return;
+            }
+
+            button.disabled = true;
+            messageElement.textContent = `Requesting OTP via ${deliveryMethod}...`;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/request-otp/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        voter_uid: voterId,
+                        delivery_method: deliveryMethod
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    localStorage.setItem('voterIdForOtp', voterId);
+                    window.location.href = 'verify.html';
+                } else {
+                    errorElement.textContent = data.error || `Error ${response.status}: Failed to request OTP.`;
+                    button.disabled = false;
+                    messageElement.textContent = '';
+                }
+            } catch (err) {
+                console.error('Request OTP Error:', err);
+                errorElement.textContent = 'A network error occurred. Is the server running?';
+                button.disabled = false;
+                messageElement.textContent = '';
+            }
+        }
+        document.getElementById('voterId').addEventListener('keypress', function(event) {
+             if (event.key === 'Enter') {
+                 event.preventDefault();
+                 requestOtp();
+             }
+         });
+    </script>
+</body>
+</html>

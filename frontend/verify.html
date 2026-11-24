@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+    <style>
+        /* --- STYLES ARE THE SAME AS BEFORE (PARTICLE BACKGROUND, ETC.) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #1a202c; padding: 20px; color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 95vh; overflow: hidden; position: relative; }
+        #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; }
+        .scrolling-title { width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.5); color: #fff; padding: 10px 0; margin-bottom: 30px; position: relative; z-index: 2; border-radius: 5px; }
+        .scrolling-title span { display: inline-block; padding-left: 100%; animation: scroll-left 20s linear infinite; font-size: 1.2em; font-weight: 600; }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .container { background-color: rgba(255, 255, 255, 0.15); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); max-width: 450px; width: 100%; margin: auto; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); text-align: center; color: #fff; position: relative; z-index: 1; }
+        h2 { color: #fff; margin-bottom: 15px; font-weight: 600; }
+        p { margin-bottom: 20px; color: #f1f1f1; }
+        label { display: block; margin-bottom: 8px; font-weight: 400; color: #f1f1f1; text-align: left; }
+        input[type="text"]{ background-color: rgba(255, 255, 255, 0.2); color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); display: block; margin-bottom: 20px; width: 100%; padding: 12px; border-radius: 4px; box-sizing: border-box; font-size: 16px; }
+        input::placeholder { color: rgba(255, 255, 255, 0.7); }
+        #otpCode { text-align: center; letter-spacing: 5px; font-size: 18px; }
+        button { display: block; width: 100%; cursor: pointer; padding: 12px 15px; background-color: #ffffff; color: #007bff; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; margin-top: 25px; transition: all 0.3s ease; }
+        button:hover { background-color: #f1f1f1; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        button:disabled { background-color: #aaa; cursor: not-allowed; transform: none; }
+        .error, .message { margin-bottom: 15px; font-weight: bold; text-align: center; min-height: 1em; }
+        .error { color: #ffcdd2; }
+        .message { color: #c8e6c9; }
+    </style>
+</head>
+<body>
+
+    <div id="particles-js"></div>
+    
+    <div class="scrolling-title">
+        <span>E-Vote-Portal-Online-Secure-EVM-System ✨ E-Vote-Portal-Online-Secure-EVM-System ✨ E-Vote-Portal-Online-Secure-EVM-System ✨</span>
+    </div>
+
+    <div class="container">
+        <h2>🔒 Verify OTP</h2>
+        <p>An OTP was sent to your mobile number (check console for testing). Enter the 6-digit code below.</p>
+        <p id="message" class="message"></p>
+        <p id="error" class="error"></p>
+
+        <label for="otpCode">Enter OTP Code:</label>
+        <input type="text" id="otpCode" name="otpCode" maxlength="6" placeholder="______" required>
+
+        <button onclick="verifyOtp()">Verify & Proceed</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS("particles-js", { "particles": { "number": { "value": 80, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#ffffff" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": false }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 6, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "repulse": { "distance": 200, "duration": 0.4 }, "push": { "particles_nb": 4 } } }, "retina_detect": true });
+    </script>
+
+    <script>
+        // --- JAVASCRIPT IS UNCHANGED ---
+        const API_BASE_URL = "http://127.0.0.1:8000/api";
+        const voterId = localStorage.getItem('voterIdForOtp');
+
+        if (!voterId) {
+            alert('Session error. Please request OTP again.');
+            window.location.href = 'index.html';
+        }
+
+        async function verifyOtp() {
+            const otpInput = document.getElementById('otpCode');
+            const otpCode = otpInput.value.trim();
+            const errorElement = document.getElementById('error');
+            const messageElement = document.getElementById('message');
+            const button = document.querySelector('button');
+            errorElement.textContent = '';
+            messageElement.textContent = '';
+
+            if (!otpCode || otpCode.length !== 6 || !/^\d+$/.test(otpCode)) {
+                errorElement.textContent = 'Please enter a valid 6-digit OTP code.';
+                return;
+            }
+
+            button.disabled = true;
+            messageElement.textContent = 'Verifying OTP...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/verify-otp/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                    body: JSON.stringify({ voter_uid: voterId, otp_code: otpCode })
+                });
+                const data = await response.json();
+
+                if (response.ok && data.token) {
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.removeItem('voterIdForOtp');
+                    window.location.href = 'vote.html';
+                } else {
+                    errorElement.textContent = data.error || `Error ${response.status}: Failed to verify OTP.`;
+                    button.disabled = false;
+                    messageElement.textContent = '';
+                }
+            } catch (err) {
+                console.error('Verify OTP Error:', err);
+                errorElement.textContent = 'A network error occurred. Please try again.';
+                button.disabled = false;
+                messageElement.textContent = '';
+            }
+        }
+        document.getElementById('otpCode').addEventListener('keypress', function(event) {
+             if (event.key === 'Enter') {
+                 event.preventDefault();
+                 verifyOtp();
+             }
+         });
+    </script>
+</body>
+</html>

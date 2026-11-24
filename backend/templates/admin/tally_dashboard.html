@@ -1,0 +1,116 @@
+{% extends "admin/base_site.html" %} {# Extends the main admin theme #}
+{% load static %}
+
+{# Add Chart.js library to the <head> #}
+{% block extrahead %}
+    {{ block.super }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* Add some basic styling for the chart container */
+        .chart-container {
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        /* Style for dark mode */
+        body.theme-dark .chart-container {
+            background: #2c3b41; /* Match Jazzmin dark theme */
+        }
+    </style>
+{% endblock %}
+
+
+{# Add the chart to the main content block #}
+{% block content %}
+<div id="content-main">
+    <h1>{{ title|default:"Vote Tally" }}</h1>
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="chart-container">
+                <p id="chart-loading-message">Loading chart data from API...</p>
+                <canvas id="voteTallyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // URL for your existing tally API
+            // --- IMPORTANT: Manually change '1' if your election ID is different ---
+            const tallyApiUrl = "/api/elections/1/tally/"; 
+            
+            const loadingMessage = document.getElementById('chart-loading-message');
+            const chartCanvas = document.getElementById('voteTallyChart');
+            const ctx = chartCanvas.getContext('2d');
+
+            fetch(tallyApiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`API request failed with status ${response.status} (${response.statusText}).`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data && data.results) {
+                        loadingMessage.style.display = 'none'; // Hide loading message
+                        
+                        const labels = data.results.map(candidate => candidate.name);
+                        const votes = data.results.map(candidate => candidate.votes);
+
+                        // Create the bar chart
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: labels,
+                                datasets: [{
+                                    label: '# of Votes',
+                                    data: votes,
+                                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                                    borderColor: 'rgba(54, 162, 235, 1)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        ticks: {
+                                            stepSize: 1,
+                                            // Make Y-axis labels visible in dark mode
+                                            color: document.body.classList.contains('theme-dark') ? '#fff' : '#666'
+                                        }
+                                    },
+                                    x: {
+                                        ticks: {
+                                            // Make X-axis labels visible in dark mode
+                                            color: document.body.classList.contains('theme-dark') ? '#fff' : '#666'
+                                        }
+                                    }
+                                },
+                                plugins: {
+                                    title: {
+                                        display: true,
+                                        text: data.election || 'Election Results',
+                                        font: { size: 18 },
+                                        color: document.body.classList.contains('theme-dark') ? '#fff' : '#333'
+                                    },
+                                    legend: { display: false }
+                                }
+                            }
+                        });
+                    } else {
+                        throw new Error("Received invalid data structure from tally API.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching tally data for dashboard:', error);
+                    loadingMessage.innerHTML = `<p style="color: red; font-weight: bold;">Error Loading Chart:</p>
+                                                 <p style="color: red;">${error.message}</p>
+                                                 <p>Make sure the Tally API at <code>${tallyApiUrl}</code> is working.</p>
+                                                 <p>(Remember to comment out the "is closed" check in 'tally_results' in elections/views.py for testing)</p>`;
+                });
+        });
+    </script>
+</div>
+{% endblock %}

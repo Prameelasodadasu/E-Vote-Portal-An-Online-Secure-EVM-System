@@ -1,0 +1,86 @@
+{% extends "jazzmin/base_site.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+
+<style>
+    #particles-js {
+        position: fixed; /* Keep it fixed in the background */
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        z-index: -1; /* Place it behind all admin content */
+    }
+
+    /* Make default Jazzmin content background transparent so we see particles */
+    /* Light Mode */
+    .content-wrapper, .main-footer, .main-header, .brand-link {
+        background: rgba(255, 255, 255, 0.1) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    .content {
+        background: transparent !important;
+    }
+    /* Dark Mode */
+    body.dark-mode .content-wrapper,
+    body.dark-mode .main-footer,
+    body.dark-mode .main-header,
+    body.dark-mode .brand-link {
+        background: rgba(52, 58, 64, 0.1) !important; /* Darker glass */
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-color: rgba(255, 255, 255, 0.1) !important;
+    }
+</style>
+{% endblock %}
+
+
+{% block page_content_wrapper %}
+    <div id="particles-js"></div>
+
+    {{ block.super }}
+{% endblock %}
+
+
+{% block extrajs %}
+{{ block.super }}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if we are in dark mode to set particle color
+        const isDark = document.body.classList.contains('dark-mode');
+        const particleColor = isDark ? "#ffffff" : "#000000"; // White dots on dark, black on light
+        const lineColor = isDark ? "#ffffff" : "#000000";
+
+        particlesJS("particles-js", {
+            "particles": {
+                "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                "color": { "value": particleColor }, // Use dynamic color
+                "shape": { "type": "circle" },
+                "opacity": { "value": 0.5, "random": true },
+                "size": { "value": 3, "random": true },
+                "line_linked": { "enable": true, "distance": 150, "color": lineColor, "opacity": 0.4, "width": 1 },
+                "move": { "enable": true, "speed": 4, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+            },
+            "interactivity": {
+                "detect_on": "window",
+                "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" }, "resize": true },
+                "modes": { "repulse": { "distance": 100, "duration": 0.4 }, "push": { "particles_nb": 4 } }
+            },
+            "retina_detect": true
+        });
+
+        // HACK: Force re-color on theme toggle
+        // Find the theme toggle button and add an event listener
+        const themeToggle = document.querySelector('a[data-widget="pushmenu"][data-enable-remember="true"]'); // This selector might be fragile
+        if (themeToggle) {
+             // This is a guess, the real toggle might be different.
+             // For now, the particles will just load with the default theme color.
+        }
+    });
+</script>
+{% endblock %}

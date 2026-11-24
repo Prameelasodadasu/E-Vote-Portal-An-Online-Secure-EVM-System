@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cast Your Vote</title>
+    <style>
+        /* --- STYLES ARE THE SAME AS BEFORE (PARTICLE BACKGROUND, ETC.) --- */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+        body { font-family: 'Poppins', sans-serif; background-color: #1a202c; padding: 20px; color: #fff; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; min-height: 100vh; overflow-x: hidden; overflow-y: auto; position: relative; }
+        #particles-js { position: absolute; width: 100%; height: 100%; top: 0; left: 0; z-index: 0; }
+        .scrolling-title { width: 100%; overflow: hidden; white-space: nowrap; box-sizing: border-box; background-color: rgba(0, 0, 0, 0.5); color: #fff; padding: 10px 0; margin-bottom: 30px; position: relative; z-index: 2; border-radius: 5px; flex-shrink: 0; }
+        .scrolling-title span { display: inline-block; padding-left: 100%; animation: scroll-left 20s linear infinite; font-size: 1.2em; font-weight: 600; }
+        @keyframes scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .container { background-color: rgba(255, 255, 255, 0.1); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); max-width: 600px; width: 100%; margin: auto 0; padding: 30px 40px; border-radius: 12px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); text-align: center; color: #fff; position: relative; z-index: 1; margin-bottom: 40px; }
+        h2 { color: #fff; margin-bottom: 10px; font-weight: 600; }
+        #election-details h3 { color: #fff; margin-bottom: 5px; }
+        #election-details p { text-align: center; color: #f1f1f1; margin-bottom: 25px; }
+        button { display: block; width: 100%; cursor: pointer; padding: 12px 15px; background-color: #28a745; color: #fff; border: none; border-radius: 4px; font-size: 16px; font-weight: 600; margin-top: 30px; transition: all 0.3s ease; }
+        button:hover { background-color: #1e7e34; transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); }
+        button:disabled { background-color: #aaa; cursor: not-allowed; transform: none; }
+        .error, .message { margin: 15px 0; font-weight: bold; text-align: center; min-height: 1em; }
+        .error { color: #ffcdd2; }
+        .message { color: #c8e6c9; }
+        #voteForm h4 { text-align: left; margin-top: 25px; margin-bottom: 15px; color: #f1f1f1; border-bottom: 1px solid rgba(255, 255, 255, 0.2); padding-bottom: 5px; }
+        .candidate { background-color: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); padding: 15px; margin-bottom: 10px; border-radius: 4px; display: flex; align-items: center; cursor: pointer; transition: background-color 0.2s; text-align: left; }
+        .candidate:hover { background-color: rgba(255, 255, 255, 0.2); }
+        .candidate input[type="radio"] { appearance: none; -webkit-appearance: none; width: 20px; height: 20px; border: 2px solid #fff; border-radius: 50%; margin-right: 15px; cursor: pointer; position: relative; flex-shrink: 0; }
+        .candidate input[type="radio"]:checked::before { content: ''; display: block; width: 10px; height: 10px; background-color: #fff; border-radius: 50%; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .candidate label { margin-bottom: 0; font-weight: normal; flex-grow: 1; cursor: pointer; color: #fff; text-align: left; }
+        #candidates-list { max-height: 40vh; overflow-y: auto; padding-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <div id="particles-js"></div>
+    
+    <div class="scrolling-title">
+        <span>E-Vote-Portal-Online-Secure-EVM-System ✨ E-Vote-Portal-Online-Secure-EVM-System ✨ E-Vote-Portal-Online-Secure-EVM-System ✨</span>
+    </div>
+
+    <div class="container vote-page">
+        <h2>🗳️ Cast Your Vote</h2>
+        <div id="election-details"><p>Loading election...</p></div>
+        <p id="message" class="message"></p>
+        <p id="error" class="error"></p>
+
+        <form id="voteForm">
+             <div id="candidates-list"></div>
+             <button type="button" onclick="castVote()" id="voteButton" style="display:none;">Submit My Vote</button>
+        </form>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        particlesJS("particles-js", { "particles": { "number": { "value": 80, "density": { "enable": true, "value_area": 800 } }, "color": { "value": "#ffffff" }, "shape": { "type": "circle" }, "opacity": { "value": 0.5, "random": false }, "size": { "value": 3, "random": true }, "line_linked": { "enable": true, "distance": 150, "color": "#ffffff", "opacity": 0.4, "width": 1 }, "move": { "enable": true, "speed": 6, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false } }, "interactivity": { "detect_on": "canvas", "events": { "onhover": { "enable": true, "mode": "repulse" }, "onclick": { "enable": true, "mode": "push" }, "resize": true }, "modes": { "repulse": { "distance": 200, "duration": 0.4 }, "push": { "particles_nb": 4 } } }, "retina_detect": true });
+    </script>
+
+    <script>
+        // --- JAVASCRIPT IS (ALMOST) UNCHANGED ---
+        const API_BASE_URL = "http://127.0.0.1:8000/api";
+        const token = localStorage.getItem('authToken');
+        let currentElectionId = null;
+
+        if (!token) {
+            alert('Authentication token missing. Please log in again.');
+            window.location.href = 'index.html';
+        }
+
+        async function loadElection() {
+            const electionDetailsElement = document.getElementById('election-details');
+            const candidatesListElement = document.getElementById('candidates-list');
+            const voteButton = document.getElementById('voteButton');
+            const errorElement = document.getElementById('error');
+            electionDetailsElement.innerHTML = '<p>Loading election details...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/elections/active/`);
+                if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+                const elections = await response.json();
+
+                if (!elections || elections.length === 0) {
+                    electionDetailsElement.innerHTML = '<p>No active elections found at this time.</p>';
+                    return;
+                }
+
+                const election = elections[0];
+                currentElectionId = election.id;
+
+                // This code already displays the election title
+                electionDetailsElement.innerHTML = `<h3>${election.title}</h3><p>${election.description || ''}</p>`;
+
+                let candidatesHtml = '<h4>Select a Candidate:</h4>';
+                if (election.candidates && election.candidates.length > 0) {
+                     election.candidates.forEach(candidate => {
+                        candidatesHtml += `
+                            <div class="candidate" onclick="selectCandidate(${candidate.id})">
+                                <input type="radio" id="candidate_${candidate.id}" name="candidate" value="${candidate.id}" required>
+                                <label for="candidate_${candidate.id}">${candidate.name} (${candidate.party || 'N/A'}) <br><small>Symbol: ${candidate.symbol || 'N/A'}</small></label>
+                            </div>
+                        `;
+                    });
+                    candidatesListElement.innerHTML = candidatesHtml;
+                    voteButton.style.display = 'block';
+                } else {
+                     candidatesListElement.innerHTML = '<p>No candidates found for this election.</p>';
+                     voteButton.style.display = 'none';
+                }
+
+            } catch (err) {
+                console.error('Load Election Error:', err);
+                electionDetailsElement.innerHTML = '<p>Error loading election details.</p>';
+                errorElement.textContent = 'An error occurred loading the election. Please try refreshing.';
+            }
+        }
+        
+        function selectCandidate(candidateId) {
+             const radio = document.getElementById(`candidate_${candidateId}`);
+             if (radio) radio.checked = true;
+        }
+
+        async function castVote() {
+            if (!currentElectionId) {
+                 alert('Error: No election selected.');
+                 return;
+            }
+            const selectedCandidateInput = document.querySelector('input[name="candidate"]:checked');
+            const errorElement = document.getElementById('error');
+            const messageElement = document.getElementById('message');
+            const voteButton = document.getElementById('voteButton');
+            errorElement.textContent = '';
+            messageElement.textContent = '';
+
+            if (!selectedCandidateInput) {
+                errorElement.textContent = 'Please select a candidate before submitting.';
+                return;
+            }
+
+            const candidateId = selectedCandidateInput.value;
+            voteButton.disabled = true;
+            messageElement.textContent = 'Submitting your vote...';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/elections/${currentElectionId}/vote/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Token ${token}`,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ candidate_id: parseInt(candidateId) })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    messageElement.textContent = data.message || 'Vote cast successfully!';
+                    localStorage.removeItem('authToken');
+                    voteButton.style.display = 'none';
+                    document.getElementById('voteForm').style.display = 'none';
+                } else {
+                    errorElement.textContent = data.error || data.detail || `Error ${response.status}: Failed to cast vote.`;
+                    voteButton.disabled = false;
+                    messageElement.textContent = '';
+                     if (response.status === 401 || (response.status === 403 && data.detail && data.detail.includes("token"))) {
+                          localStorage.removeItem('authToken');
+                          alert("Authentication error or token expired. Please log in again.");
+                          window.location.href = 'index.html';
+                     }
+                }
+            } catch (err) {
+                console.error('Cast Vote Error:', err);
+                errorElement.textContent = 'A network error occurred while casting vote. Please try again.';
+                voteButton.disabled = false;
+                messageElement.textContent = '';
+            }
+        }
+
+        window.onload = loadElection;
+    </script>
+</body>
+</html>
